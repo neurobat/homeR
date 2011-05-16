@@ -9,3 +9,4 @@ Description: A collection of functions useful for the analysis of
   building physics experiments.
 License: GPL (>= 2)
 LazyLoad: yes
+Encoding: UTF-8
