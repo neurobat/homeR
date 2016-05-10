@@ -1,35 +1,27 @@
-pmv.test <- function() {
+library(homeR)
+context("Predicted Mean Vote")
+
+test_that("pmv() handles scalars", {
   vote <- pmv(clo=1.0,
               met=1.2,
               air.temp=19,
               saturation=40)
-  stopifnot(!is.null(vote))
-  stopifnot(vote > -0.6 && vote < -0.5)
-}
+  expect_gt(vote, -0.6)
+  expect_lt(vote, -0.5)
+})
 
-pmv.test.vectors <- function() {
+test_that("pmv() handles vectors", {
   votes <- pmv(clo=1.0,
                met=1.2,
                air.temp=c(19,30),
                sat=40)
-  stopifnot(length(votes)==2)
-  stopifnot(all.equal(votes,
-                      c(pmv(clo=1.0,
+  expect_length(votes, 2)
+  expect_equal(votes, c(pmv(clo=1.0,
                             met=1.2,
                             air.temp=19,
                             sat=40),
                         pmv(clo=1.0,
                             met=1.2,
                             air.temp=30,
-                            sat=40)),
-                      tolerance=1e-4))
-                        
-}
-
-run.tests <- function() {
-  pmv.test()
-  pmv.test.vectors()
-}
-
-library(homeR)
-run.tests()
+                            sat=40)))
+})

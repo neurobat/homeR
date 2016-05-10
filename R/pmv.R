@@ -70,4 +70,4 @@ pmv <- function(clo, met, air.temp, saturation) {
               - heat.loss.respiration - heat.loss.dry
               - heat.loss.rad - heat.loss.conv)
 }
-
+pmv <- Vectorize(pmv)

@@ -10,3 +10,4 @@ Description: A collection of functions useful for the analysis of
 License: GPL (>= 2)
 LazyLoad: yes
 Encoding: UTF-8
+Suggests: testthat
