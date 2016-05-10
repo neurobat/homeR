@@ -1,4 +1,4 @@
 library(testthat)
 library(homeR)
 
-test_check("homeR")
+test_check("homeR") 
