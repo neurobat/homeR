@@ -1,5 +1,30 @@
-pmv <-
-function(clo, met, air.temp, saturation) {
+#' Predicted Mean Vote
+#' 
+#' Computes Fanger's predicted mean vote
+#' 
+#' Compute the predicted mean vote for one or more combinations of 
+#' clo, met, air temperature and moisture saturation. The inputs arguments 
+#' can be scalars or vectors.
+#' 
+#' @param clo Thermal insulation of clothing in [clo] (underwear, blouse/shirt, slacks/trousers, jacket, socks and shoes are approximately 1 clo)
+#' @param met Physical activity in [met] (one person seated at rest is approximately 1 met)
+#' @param air.temp Indoor air temperature (assumed equal to mean radiant temperature) in [C]
+#' @param saturation Ratio of moisture content to moisture content of saturated air at the same temperature, in [\%] (approximately the same thing as relative humidity)
+#' @return The predicted mean vote, a value between -3 (cold) to +3 (hot)
+#' @references CIBSE Guide A, section 1.4 and 1.A1.2 (from which this implementation is derived)
+#' @examples 
+#' # With scalars
+#' pmv(clo=1.0,
+#'     met=1.2,
+#'     air.temp=19,
+#'     saturation=40)
+#' # With vectors
+#' pmv(clo=c(1.0, 1.5),
+#'     met=c(1.2, 0.6),
+#'     air.temp=c(19, 30),
+#'     sat=c(35, 40))
+#' @export
+pmv <- function(clo, met, air.temp, saturation) {
   # Adapted from CIBSE Guide A, 1.A1.2, p. 51
   saturated.vapour.pressure <- exp(16.6536-4030.183/(air.temp+235)) # kPa
   vapour.pressure <- saturated.vapour.pressure*10*saturation # Pa
@@ -45,4 +70,4 @@ function(clo, met, air.temp, saturation) {
               - heat.loss.respiration - heat.loss.dry
               - heat.loss.rad - heat.loss.conv)
 }
-
+pmv <- Vectorize(pmv)
