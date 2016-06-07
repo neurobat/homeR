@@ -49,9 +49,10 @@ bhm <- function(formula, data) {
   T <- temperatures(formula, data)
   fit <- posteriorMode(Q, T, minusLogPosterior)
   result <- list()
-  result$coefficients <- fit@coef
-  result$residuals <- with(as.list(fit@coef),
+  result$coefficients <- stats4::coef(fit)
+  result$residuals <- with(as.list(result$coefficients),
                            Q - epochEnergy(K, tb, DHW, T))
+  result$vcov <- stats4::vcov(fit)
   class(result) <- "bhm"
   result
 }
@@ -105,3 +106,5 @@ dailyEnergy <- function(K, tb, DHW, temperature) K * pos(tb - temperature) + DHW
 pos <- function(x) pmax(x, 0)
 
 residuals.bhm <- function(bhm) bhm$residuals
+
+vcov.bhm <- function(bhm) bhm$vcov
