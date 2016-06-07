@@ -72,3 +72,13 @@ test_that("works on epochs of different legths", {
   expect_equal(coefs['DHW'], c(DHW = 0), tolerance = 2, scale = 1)
   expect_equal(coefs['sigma'], c(sigma = 100), tolerance = 5, scale = 1)
 })
+
+test_that("works on synthetic data from paper", {
+  load("fakeMonthlyEnergy.RData")
+  model <- bhm(Energy ~ DailyMeans, fakeMonthlyEnergy)
+  coefs <- coef(model)
+  expect_equal(coefs['K'], c(K = 20), tolerance = 5e-2)
+  expect_equal(coefs['tb'], c(tb = 12), tolerance = 5e-2)
+  expect_equal(coefs['DHW'], c(DHW = 100), tolerance = 2, scale = 1)
+  expect_equal(coefs['sigma'], c(sigma = 30), tolerance = 1, scale = 1)
+})
