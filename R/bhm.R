@@ -105,6 +105,8 @@ dailyEnergy <- function(K, tb, DHW, temperature) K * pos(tb - temperature) + DHW
 
 pos <- function(x) pmax(x, 0)
 
+#' @export
 residuals.bhm <- function(bhm) bhm$residuals
 
+#' @export
 vcov.bhm <- function(bhm) bhm$vcov
