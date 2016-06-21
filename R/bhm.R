@@ -68,16 +68,19 @@ temperatures <- function(formula, data) {
 }
 
 posteriorMode <- function(Q, T, logd) {
-  fit <- stats4::mle(logd(Q, T), method = "Nelder")
+  obj <- function(...) do.call(logd(Q, T), as.list(...))
+  initialGuess <- optim(par = c(K = 10, tb = 20, DHW = 0, sigma = 100),
+                        fn = obj)$par
+  #fit <- stats4::mle(logd(Q, T), method = "Nelder")
   # restart once
   fit <- stats4::mle(logd(Q, T), method = "Nelder",
-                     start = as.list(fit@coef), control = list(maxit = 1000))
+                     start = as.list(initialGuess), control = list(maxit = 1000))
   fit
 }
 
 minusLogPosterior <- function(energy, temperatures) {
-  function(K = 1, tb = 1, DHW = 1, sigma = 1) {
-    if (sigma <= 0 || tb < 0 || K <= 0)
+  function(K = 10, tb = 20, DHW = 0, sigma = 100) {
+    if (sigma <= 0 || tb < 0 || K <= 0 || DHW < 0)
       Inf
     else {
       predictedEnergy <- epochEnergy(K, tb, DHW, temperatures)
