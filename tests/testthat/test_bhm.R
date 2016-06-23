@@ -94,8 +94,11 @@ test_that("works with heat counter data", {
 test_that("provided log-posterior has maximum at estimated coefficients", {
   model <- bhm(E ~ T, fourDayData)
   coefs <- coef(model)
+  nonOptimalCoefs <- lapply(coefs, function(x) jitter(rep(x, 2)))
   logp <- logposterior(model)
   logPosteriorMode <- do.call(logp, as.list(coefs))
-  logPosteriorElsewhere <- do.call(logp, as.list(jitter(coefs)))
-  expect_lt(logPosteriorElsewhere, logPosteriorMode)
+  logPosteriorElsewhere <- do.call(logp, nonOptimalCoefs)
+  expect_true(all(logPosteriorElsewhere < logPosteriorMode))
+  # with a small jitter, the logp should never decrease by more than, say, 20
+  expect_true(all(logPosteriorElsewhere > logPosteriorMode - 20))
 })

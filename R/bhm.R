@@ -79,7 +79,7 @@ posteriorMode <- function(mlp) {
 }
 
 minusLogPosteriorFunction <- function(energy, temperatures) {
-  function(K = 10, tb = 20, DHW = 0, sigma = 100) {
+  mlp <- function(K = 10, tb = 20, DHW = 0, sigma = 100) {
     if (sigma <= 0 || tb < 0 || K <= 0 || DHW < 0)
       Inf
     else {
@@ -90,6 +90,7 @@ minusLogPosteriorFunction <- function(energy, temperatures) {
         chisquare(energy, predictedEnergy, sqrt(epochLength) * sigma) / 2
     }
   }
+  Vectorize(mlp)
 }
 
 chisquare <- function(energy, predictedEnergy, epochSigma) {
