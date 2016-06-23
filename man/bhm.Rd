@@ -14,7 +14,7 @@ holds the energy readouts and which variable holds the daily temperatures.}
 }
 \value{
 \code{bhm} returns an object of \link{class} "\code{bhm}". The generic
-accessor functions \code{coefficients} and \code{residuals} extract the usual
+accessor functions \code{coefficients}, \code{vcov} and \code{residuals} extract the usual
 information from the fitted model.
 }
 \description{
