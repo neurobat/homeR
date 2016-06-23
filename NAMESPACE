@@ -3,4 +3,5 @@
 S3method(residuals,bhm)
 S3method(vcov,bhm)
 export(bhm)
+export(logposterior)
 export(pmv)

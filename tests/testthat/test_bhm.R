@@ -90,3 +90,12 @@ test_that("works with heat counter data", {
   expect_within(coefs['DHW'], 0.7, pm = 0.1)
   expect_within(coefs['sigma'], 7.8, pm = 0.1)
 })
+
+test_that("provided log-posterior has maximum at estimated coefficients", {
+  model <- bhm(E ~ T, fourDayData)
+  coefs <- coef(model)
+  logp <- logposterior(model)
+  logPosteriorMode <- do.call(logp, as.list(coefs))
+  logPosteriorElsewhere <- do.call(logp, as.list(jitter(coefs)))
+  expect_lt(logPosteriorElsewhere, logPosteriorMode)
+})

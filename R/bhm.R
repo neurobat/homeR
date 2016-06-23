@@ -16,7 +16,8 @@
 #' @param data a data frame in which the energy and daily temperatures are to be found.
 #' @return \code{bhm} returns an object of \link{class} "\code{bhm}". The generic
 #' accessor functions \code{coefficients}, \code{vcov} and \code{residuals} extract the usual
-#' information from the fitted model.
+#' information from the fitted model, while \code{logposterior} will return a function
+#' that evaluates the log-posterior as a function of the parameters.
 #' @examples 
 #' set.seed(1111)
 #' 
@@ -47,8 +48,9 @@ bhm <- function(formula, data) {
   Q <- energy(formula, data)
   stopifnot(all(Q >= 0))
   T <- temperatures(formula, data)
-  fit <- posteriorMode(Q, T, minusLogPosterior)
   result <- list()
+  result$minusLogPosterior <- minusLogPosteriorFunction(Q, T)
+  fit <- posteriorMode(result$minusLogPosterior)
   result$coefficients <- stats4::coef(fit)
   result$residuals <- with(as.list(result$coefficients),
                            Q - epochEnergy(K, tb, DHW, T))
@@ -67,18 +69,16 @@ temperatures <- function(formula, data) {
   data[[attr(terms, "term.labels")]]
 }
 
-posteriorMode <- function(Q, T, logd) {
-  obj <- function(...) do.call(logd(Q, T), as.list(...))
+posteriorMode <- function(mlp) {
+  obj <- function(...) do.call(mlp, as.list(...))
   initialGuess <- optim(par = c(K = 10, tb = 20, DHW = 0, sigma = 100),
                         fn = obj)$par
-  #fit <- stats4::mle(logd(Q, T), method = "Nelder")
-  # restart once
-  fit <- stats4::mle(logd(Q, T), method = "Nelder",
+  fit <- stats4::mle(mlp, method = "Nelder",
                      start = as.list(initialGuess), control = list(maxit = 1000))
   fit
 }
 
-minusLogPosterior <- function(energy, temperatures) {
+minusLogPosteriorFunction <- function(energy, temperatures) {
   function(K = 10, tb = 20, DHW = 0, sigma = 100) {
     if (sigma <= 0 || tb < 0 || K <= 0 || DHW < 0)
       Inf
@@ -113,3 +113,13 @@ residuals.bhm <- function(bhm) bhm$residuals
 
 #' @export
 vcov.bhm <- function(bhm) bhm$vcov
+
+#' Log-posterior of a Bayesian Heating Model
+#' 
+#' Provides the log-posterior of a heating model given the data, as a function
+#' of the model's parameters.
+#' 
+#' @param bhm a fitted model returned by a call to \code{bhm()}
+#' @return a function of the model's parameters (currently K, tb, DHW and sigma)
+#' @export
+logposterior <- function(bhm) function(...) -bhm$minusLogPosterior(...)

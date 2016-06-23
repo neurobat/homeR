@@ -15,7 +15,8 @@ holds the energy readouts and which variable holds the daily temperatures.}
 \value{
 \code{bhm} returns an object of \link{class} "\code{bhm}". The generic
 accessor functions \code{coefficients}, \code{vcov} and \code{residuals} extract the usual
-information from the fitted model.
+information from the fitted model, while \code{logposterior} will return a function
+that evaluates the log-posterior as a function of the parameters.
 }
 \description{
 Estimates the parameters of a building's heating model.
