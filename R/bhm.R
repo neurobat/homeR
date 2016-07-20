@@ -14,6 +14,7 @@
 #' @param formula an object of class "\link{formula}": a description of which variable
 #' holds the energy readouts and which variable holds the daily temperatures.
 #' @param data a data frame in which the energy and daily temperatures are to be found.
+#' @param baseLoad a optional constant base load, e.g. for domestic hot water preparation.
 #' @return \code{bhm} returns an object of \link{class} "\code{bhm}". The generic
 #' accessor functions \code{coefficients}, \code{vcov} and \code{residuals} extract the usual
 #' information from the fitted model, while \code{logposterior} will return a function
@@ -44,13 +45,13 @@
 #' coef(fit2)
 #' resid(fit2)
 #' @export
-bhm <- function(formula, data) {
+bhm <- function(formula, data, baseLoad = NULL) {
   Q <- energy(formula, data)
   stopifnot(all(Q >= 0))
   T <- temperatures(formula, data)
   result <- list()
   result$minusLogPosterior <- minusLogPosteriorFunction(Q, T)
-  fit <- posteriorMode(result$minusLogPosterior)
+  fit <- posteriorMode(result$minusLogPosterior, baseLoad)
   result$coefficients <- stats4::coef(fit)
   result$residuals <- with(as.list(result$coefficients),
                            Q - epochEnergy(K, tb, DHW, T))
@@ -69,12 +70,20 @@ temperatures <- function(formula, data) {
   data[[attr(terms, "term.labels")]]
 }
 
-posteriorMode <- function(mlp) {
-  obj <- function(...) do.call(mlp, as.list(...))
+posteriorMode <- function(mlp, baseLoad = NULL) {
+  obj <- function(...) {
+    l <- as.list(...)
+    if (!is.null(baseLoad))
+      l$DHW <- baseLoad
+    do.call(mlp, l)
+  }
   initialGuess <- optim(par = c(K = 10, tb = 20, DHW = 0, sigma = 100),
                         fn = obj)$par
+  fixed <- ifelse(is.null(baseLoad), list(), list(DHW = baseLoad))
   fit <- stats4::mle(mlp, method = "Nelder",
-                     start = as.list(initialGuess), control = list(maxit = 1000))
+                     start = as.list(initialGuess),
+                     control = list(maxit = 1000),
+                     fixed = fixed)
   fit
 }
 

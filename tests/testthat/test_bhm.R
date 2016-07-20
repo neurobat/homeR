@@ -102,3 +102,10 @@ test_that("provided log-posterior has maximum at estimated coefficients", {
   # with a small jitter, the logp should never decrease by more than, say, 20
   expect_true(all(logPosteriorElsewhere > logPosteriorMode - 20))
 })
+
+test_that("user can specify an arbitrary DHW", {
+  twoDaysBelowBaseTemp <- fourDayData[1:2, ]
+  model <- bhm(E ~ T, data = twoDaysBelowBaseTemp, baseLoad = 0)
+  coefs <- coef(model)
+  expect_within(coefs['K'], K, pm = 0.1)
+})
