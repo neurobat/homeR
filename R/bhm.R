@@ -52,10 +52,10 @@ bhm <- function(formula, data, baseLoad = NULL) {
   result <- list()
   result$minusLogPosterior <- minusLogPosteriorFunction(Q, T)
   fit <- posteriorMode(result$minusLogPosterior, baseLoad)
-  result$coefficients <- stats4::coef(fit)
+  result$coefficients <- coef(fit)
   result$residuals <- with(as.list(result$coefficients),
                            Q - epochEnergy(K, tb, DHW, T))
-  result$vcov <- stats4::vcov(fit)
+  result$vcov <- vcov(fit)
   class(result) <- "bhm"
   result
 }
@@ -75,15 +75,12 @@ posteriorMode <- function(mlp, baseLoad = NULL) {
     l <- as.list(...)
     if (!is.null(baseLoad))
       l$DHW <- baseLoad
-    do.call(mlp, l)
+    -do.call(mlp, l)
   }
-  initialGuess <- optim(par = c(K = 10, tb = 20, DHW = 0, sigma = 100),
-                        fn = obj)$par
-  fixed <- ifelse(is.null(baseLoad), list(), list(DHW = baseLoad))
-  fit <- stats4::mle(mlp, method = "Nelder",
-                     start = as.list(initialGuess),
-                     control = list(maxit = 1000),
-                     fixed = fixed)
+  start <- c(K = 10, tb = 20, DHW = 0, sigma = 100)
+  initialGuess <- optim(par = start,
+                        fn = function(x) -obj(x))$par
+  fit <- maxLik::maxLik(obj, start = initialGuess, method = "NM")
   fit
 }
 

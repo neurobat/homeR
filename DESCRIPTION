@@ -11,4 +11,4 @@ License: GPL (>= 2)
 LazyLoad: yes
 Encoding: UTF-8
 Suggests: testthat, plyr
-Imports: stats4
+Imports: maxLik
