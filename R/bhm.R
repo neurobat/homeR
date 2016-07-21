@@ -50,8 +50,8 @@ bhm <- function(formula, data, baseLoad = NULL) {
   stopifnot(all(Q >= 0))
   T <- temperatures(formula, data)
   result <- list()
-  result$minusLogPosterior <- minusLogPosteriorFunction(Q, T)
-  fit <- posteriorMode(result$minusLogPosterior, baseLoad)
+  result$logPosterior <- logPosteriorFunction(Q, T)
+  fit <- posteriorMode(result$logPosterior, baseLoad)
   result$coefficients <- coef(fit)
   result$residuals <- with(as.list(result$coefficients),
                            Q - epochEnergy(K, tb, DHW, T))
@@ -70,30 +70,26 @@ temperatures <- function(formula, data) {
   data[[attr(terms, "term.labels")]]
 }
 
-posteriorMode <- function(mlp, baseLoad = NULL) {
-  obj <- function(...) {
-    l <- as.list(...)
-    if (!is.null(baseLoad))
-      l$DHW <- baseLoad
-    -do.call(mlp, l)
-  }
+posteriorMode <- function(logposterior, baseLoad = NULL) {
+  obj <- plyr::splat(logposterior)
   start <- c(K = 10, tb = 20, DHW = 0, sigma = 100)
-  initialGuess <- optim(par = start,
-                        fn = function(x) -obj(x))$par
-  fit <- maxLik::maxLik(obj, start = initialGuess, method = "NM")
+  if (!is.null(baseLoad)) start['DHW'] <- baseLoad
+  fixed <- if (is.null(baseLoad)) NULL else "DHW"
+  fit <- maxLik::maxLik(obj, start = start, method = "NM", fixed = fixed)
+  fit <- maxLik::maxLik(obj, start = coef(fit), method = "NM", fixed = fixed)
   fit
 }
 
-minusLogPosteriorFunction <- function(energy, temperatures) {
+logPosteriorFunction <- function(energy, temperatures) {
   mlp <- function(K = 10, tb = 20, DHW = 0, sigma = 100) {
     if (sigma <= 0 || tb < 0 || K <= 0 || DHW < 0)
-      Inf
+      - Inf
     else {
       predictedEnergy <- epochEnergy(K, tb, DHW, temperatures)
       stopifnot(length(predictedEnergy) == length(energy))
       epochLength <- sapply(temperatures, length)
-      (1 + length(energy)) * log(sigma) + 
-        chisquare(energy, predictedEnergy, sqrt(epochLength) * sigma) / 2
+      - ((1 + length(energy)) * log(sigma) + 
+        chisquare(energy, predictedEnergy, sqrt(epochLength) * sigma) / 2)
     }
   }
   Vectorize(mlp)
@@ -129,4 +125,4 @@ vcov.bhm <- function(object, ...) object$vcov
 #' @param bhm a fitted model returned by a call to \code{bhm()}
 #' @return a function of the model's parameters (currently K, tb, DHW and sigma)
 #' @export
-logposterior <- function(bhm) function(...) -bhm$minusLogPosterior(...)
+logposterior <- function(bhm) bhm$logPosterior
