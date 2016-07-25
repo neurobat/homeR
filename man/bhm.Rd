@@ -4,13 +4,15 @@
 \alias{bhm}
 \title{Bayesian Heating Model}
 \usage{
-bhm(formula, data)
+bhm(formula, data, baseLoad = NULL)
 }
 \arguments{
 \item{formula}{an object of class "\link{formula}": a description of which variable
 holds the energy readouts and which variable holds the daily temperatures.}
 
 \item{data}{a data frame in which the energy and daily temperatures are to be found.}
+
+\item{baseLoad}{a optional constant base load, e.g. for domestic hot water preparation.}
 }
 \value{
 \code{bhm} returns an object of \link{class} "\code{bhm}". The generic

@@ -104,8 +104,8 @@ test_that("provided log-posterior has maximum at estimated coefficients", {
 })
 
 test_that("user can specify an arbitrary DHW", {
-  twoDaysBelowBaseTemp <- fourDayData[1:2, ]
-  model <- bhm(E ~ T, data = twoDaysBelowBaseTemp, baseLoad = 0)
+  threeDaysBelowBaseTemp <- fourDayData[1:3, ]
+  model <- bhm(E ~ T, data = threeDaysBelowBaseTemp, baseLoad = 0)
   coefs <- coef(model)
   expect_within(coefs['K'], K, pm = 0.1)
   expect_within(coefs['DHW'], 0, pm = 0.1)

@@ -52,10 +52,11 @@ bhm <- function(formula, data, baseLoad = NULL) {
   result <- list()
   result$logPosterior <- logPosteriorFunction(Q, T)
   fit <- posteriorMode(result$logPosterior, baseLoad)
-  result$coefficients <- coef(fit)
+  stopifnot('DHW' %in% names(fit$par) || !is.null(baseLoad))
+  result$coefficients <- c(fit$par, DHW = baseLoad)
   result$residuals <- with(as.list(result$coefficients),
                            Q - epochEnergy(K, tb, DHW, T))
-  result$vcov <- vcov(fit)
+  result$vcov <- solve(fit$hessian)
   class(result) <- "bhm"
   result
 }
@@ -71,26 +72,25 @@ temperatures <- function(formula, data) {
 }
 
 posteriorMode <- function(logposterior, baseLoad = NULL) {
-  obj <- plyr::splat(logposterior)
-  start <- c(K = 10, tb = 20, DHW = 0, sigma = 100)
-  if (!is.null(baseLoad)) start['DHW'] <- baseLoad
-  fixed <- if (is.null(baseLoad)) NULL else "DHW"
-  fit <- maxLik::maxLik(obj, start = start, method = "NM", fixed = fixed)
-  fit <- maxLik::maxLik(obj, start = coef(fit), method = "NM", fixed = fixed)
+  obj <- function(par, ...) {
+   - do.call(logposterior, as.list(c(par, ...)))
+  }
+  start <- list(K = 1, tb = 10, DHW = 1, sigma = 1)
+  fixed <- if (!is.null(baseLoad)) list(DHW = baseLoad) else list()
+  start[names(fixed)] <- NULL
+  fit <- optim(start, obj, gr = NULL, fixed, method = "SANN", control = list(maxit = 20000))
+  fit <- optim(fit$par, obj, gr = NULL, fixed, control = list(maxit = 1000), hessian = TRUE)
   fit
 }
 
 logPosteriorFunction <- function(energy, temperatures) {
   mlp <- function(K = 10, tb = 20, DHW = 0, sigma = 100) {
-    if (sigma <= 0 || tb < 0 || K <= 0 || DHW < 0)
-      - Inf
-    else {
-      predictedEnergy <- epochEnergy(K, tb, DHW, temperatures)
-      stopifnot(length(predictedEnergy) == length(energy))
-      epochLength <- sapply(temperatures, length)
-      - ((1 + length(energy)) * log(sigma) + 
-        chisquare(energy, predictedEnergy, sqrt(epochLength) * sigma) / 2)
-    }
+    if (sigma <= 0) return(-Inf)
+    predictedEnergy <- epochEnergy(K, tb, DHW, temperatures)
+    stopifnot(length(predictedEnergy) == length(energy))
+    epochLength <- sapply(temperatures, length)
+    - ((1 + length(energy)) * log(sigma) + 
+         chisquare(energy, predictedEnergy, sqrt(epochLength) * sigma) / 2)
   }
   Vectorize(mlp)
 }
