@@ -1,14 +1,16 @@
 Package: homeR
 Type: Package
 Title: Useful Functions for Building Physics
-Version: 0.2.0.9000
+Version: 0.3.0
 Date: 2016-06-06
 Author: Neurobat AG
 Maintainer: David Lindelöf <david.lindelof@neurobat.net>
 Description: A collection of functions useful for the analysis of
-  building physics experiments.
+    building physics experiments.
 License: GPL (>= 2)
 LazyLoad: yes
 Encoding: UTF-8
-Suggests: testthat, plyr
-Imports: stats4
+Suggests:
+    testthat,
+    plyr
+RoxygenNote: 5.0.1

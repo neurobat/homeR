@@ -40,6 +40,9 @@ fourDayData <- data.frame(E = E, T = temps)
 expect_equal_coefs <- function(model)
   expect_equal(coef(model), c(K = K, tb = tb, DHW = DHW, sigma = sigma), tolerance = 1e-2, scale = 1)
 
+expect_within <- function(object, expected, pm)
+  expect_equal(as.vector(object), expected, tolerance = pm, scale = 1)
+
 test_that("finds coefs on four-day data", {
   model <- bhm(E ~ T, fourDayData)
   expect_equal_coefs(model)
@@ -63,27 +66,47 @@ test_that("find coefs on four times two-day data", {
   expect_equal_coefs(model)
 })
 
-test_that("works on epochs of different legths", {
-  load("oilConsumption.RData") # load the `goodPeriods' data frame
-  model <- bhm(Energy ~ DailyMeans, goodPeriods)
-  coefs <- coef(model)
-  expect_equal(coefs['K'], c(K = 6.1), tolerance = 5e-2)
-  expect_equal(coefs['tb'], c(tb = 17.7), tolerance = 5e-2)
-  expect_equal(coefs['DHW'], c(DHW = 0), tolerance = 2, scale = 1)
-  expect_equal(coefs['sigma'], c(sigma = 100), tolerance = 5, scale = 1)
-})
-
-test_that("works on synthetic data from paper", {
+test_that("works with synthetic data from paper", {
   load("fakeMonthlyEnergy.RData")
   model <- bhm(Energy ~ DailyMeans, fakeMonthlyEnergy)
   coefs <- coef(model)
   stderr <- sqrt(diag(vcov(model)))
-  expect_equal(coefs['K'], c(K = 20), tolerance = 5e-2)
-  expect_equal(stderr['K'], c(K = 0.1), tolerance = 0.1, scale = 1)
-  expect_equal(coefs['tb'], c(tb = 12), tolerance = 5e-2)
-  expect_equal(stderr['tb'], c(tb = 0.2), tolerance = 0.02, scale = 1)
-  expect_equal(coefs['DHW'], c(DHW = 100), tolerance = 2, scale = 1)
-  expect_equal(stderr['DHW'], c(DHW = 2), tolerance = 1, scale = 1)
-  expect_equal(coefs['sigma'], c(sigma = 30), tolerance = 1, scale = 1)
-  expect_equal(stderr['sigma'], c(sigma = 3), tolerance = 1, scale = 1)
+  expect_within(coefs['K'], 20, pm = 5e-2)
+  expect_within(stderr['K'], 0.1, pm = 0.1)
+  expect_within(coefs['tb'], 12, pm = 5e-2)
+  expect_within(stderr['tb'], 0.2, pm = 0.02)
+  expect_within(coefs['DHW'], 100, pm = 2)
+  expect_within(stderr['DHW'], 2, pm = 1)
+  expect_within(coefs['sigma'], 30, pm = 1)
+  expect_within(stderr['sigma'], 3, pm = 1)
+})
+
+test_that("works with heat counter data", {
+  load("alv.RData") # heat counter data from paper
+  model <- bhm(Energy ~ DailyMeans, alv)
+  coefs <- coef(model)
+  expect_within(coefs['K'], 2.4, pm = 0.1)
+  expect_within(coefs['tb'], 17.7, pm = 0.1)
+  expect_within(coefs['DHW'], 0.7, pm = 0.1)
+  expect_within(coefs['sigma'], 7.8, pm = 0.1)
+})
+
+test_that("provided log-posterior has maximum at estimated coefficients", {
+  model <- bhm(E ~ T, fourDayData)
+  coefs <- coef(model)
+  nonOptimalCoefs <- lapply(coefs, function(x) jitter(rep(x, 2)))
+  logp <- logposterior(model)
+  logPosteriorMode <- do.call(logp, as.list(coefs))
+  logPosteriorElsewhere <- do.call(logp, nonOptimalCoefs)
+  expect_true(all(logPosteriorElsewhere < logPosteriorMode))
+  # with a small jitter, the logp should never decrease by more than, say, 20
+  expect_true(all(logPosteriorElsewhere > logPosteriorMode - 20))
+})
+
+test_that("user can specify an arbitrary DHW", {
+  threeDaysBelowBaseTemp <- fourDayData[1:3, ]
+  model <- bhm(E ~ T, data = threeDaysBelowBaseTemp, baseLoad = 0)
+  coefs <- coef(model)
+  expect_within(coefs['K'], K, pm = 0.1)
+  expect_within(coefs['DHW'], 0, pm = 0.1)
 })
