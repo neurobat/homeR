@@ -4,6 +4,7 @@
 
 * New `vcov.bhm()` function returns the covariance matrix estimated at the posterior's mode.
 * New `logposterior()` function returns the log-posterior function for the model's data.
+* User can specify a fixed base load.
 
 
 # homeR 0.2
