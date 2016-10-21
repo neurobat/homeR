@@ -2,7 +2,7 @@ Package: homeR
 Type: Package
 Title: Useful Functions for Building Physics
 Version: 0.3.0
-Date: 2016-06-06
+Date: 2016-10-21
 Author: Neurobat AG
 Maintainer: David Lindelöf <david.lindelof@neurobat.net>
 Description: A collection of functions useful for the analysis of
