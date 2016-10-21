@@ -78,8 +78,8 @@ posteriorMode <- function(logposterior, baseLoad = NULL) {
   start <- list(K = 1, tb = 10, DHW = 1, sigma = 1)
   fixed <- if (!is.null(baseLoad)) list(DHW = baseLoad) else list()
   start[names(fixed)] <- NULL
-  fit <- optim(start, obj, gr = NULL, fixed, method = "SANN", control = list(maxit = 20000))
-  fit <- optim(fit$par, obj, gr = NULL, fixed, control = list(maxit = 1000), hessian = TRUE)
+  fit <- stats::optim(start, obj, gr = NULL, fixed, method = "SANN", control = list(maxit = 20000))
+  fit <- stats::optim(fit$par, obj, gr = NULL, fixed, control = list(maxit = 1000), hessian = TRUE)
   fit
 }
 
