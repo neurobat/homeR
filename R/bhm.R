@@ -33,9 +33,11 @@
 #' E <- K * pmax(tb - temps, 0) + DHW + rnorm(length(temps), 0, sigma)
 #' fourDayData <- data.frame(E = E, T = temps)
 #' fourDayData
+#' \dontrun{
 #' fit <- bhm(E ~ T, fourDayData)
 #' coef(fit)
 #' resid(fit)
+#' }
 #' 
 #' # With two-day measurements
 #' fourTimesTwoDayData <- with(fourDayData,
